@@ -1,0 +1,78 @@
+{%extends 'basic.html'%} 
+{%block title%}blogpost{%endblock%} 
+{%block body%}
+
+ {% for mesg in messages %}
+
+  <div class="alert alert-{{mesg.tags}} alert-dismissible fade show" role="alert">
+    <strong>Message:</strong> {{mesg}}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="false">&times;</span>
+    </button>
+  </div>
+  {% endfor %} 
+   <div class="container my-3">
+    <div class="blog-post">
+    <h2 class="blog-post-title">{{post.title}}</h2>
+    <p class="blog-post-meta">{{post.datetime}} by <a href="#">{{post.author}}</a>
+    </p>
+    <p>{{post.content}}</p>
+    <hr>
+  </div>
+</div>
+   <!--comment section-->
+  
+  <div class="container">
+    <h2>Comments <small class="text-success"> {{comments.count}}</small>
+    </h2>
+  {% if user.is_authenticated %}
+ 
+  <form action="{% url 'add_comment' %}" method="POST">
+
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="posting">Post Comment</label>
+        <input type="text" class="form-control mx-2" id="posting" name="posting" placeholder="Enter comment" Required>      
+      </div>
+      <input type="hidden" name="postSno" value="{{post.sno}}">
+      <input type="hidden" name="parentSno" value="{{comment.sno}}">
+    <button type="submit" class="btn btn-primary my-2 mx-3">Submit</button>
+    </form>
+    {% else %}
+    <h5 class="text-warning mx-3">Please Login to Post comment</h5>
+    {% endif %}
+  
+    {% for comment in comments %}
+    <div class="row my-3">
+      <div class="col-md-1">
+        <i class="bi bi-person-circle mx-auto d-block p-3"alt="user">
+      </div>
+      <div class="col-md-10 my-3">
+        <b class="text-info">{{ comment.user.username }}</b> - {{ comment.timestamp }}        <div>{{comment.comment}}</div>
+      
+    <!---->
+      <a class="btn btn-outline-primary" type="button" data-toggle="collapse" data-target="#reply{{comnt.sno}}" aria-expanded="false" aria-controls="collapseExample">
+        Reply
+      </a>
+    </div>
+    <div class="collapse" id="reply{{comnt.sno}}">
+      <div class="card card-body mx-3 bg-dark">
+        <form action="{% url 'add_comment' %}" method="POST">
+          {% csrf_token %}
+          <div class="form-group">
+              <label for="posting">Post Comment</label>
+              <input type="text" class="form-control mx-2" id="posting" name="posting" placeholder="Enter comment" required>      
+          </div>
+          <!-- Ensure 'post.Sno' is used here to correctly reference the primary key -->
+          <input type="hidden" name="postSno" value="{{ post.Sno }}"> 
+          <input type="hidden" name="parentSno" value="{{ comment.sno|default:'' }}">
+          <button type="submit" class="btn btn-primary my-2 mx-3">Submit</button>
+      </form>
+      
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+{% endfor %}
+{%endblock body%}

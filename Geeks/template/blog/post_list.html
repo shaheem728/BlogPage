@@ -1,0 +1,113 @@
+{%extends 'basic.html'%} 
+{%block title%}blogpost{%endblock%} 
+{%block body%}
+{% for mesg in messages %}
+
+<div class="alert alert-{{mesg.tags}} alert-dismissible fade show" role="alert">
+  <strong>Message:</strong> {{mesg}}
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+    <span aria-hidden="false">&times;</span>
+  </button>
+</div>
+{% endfor %} 
+ <div class="container my-3">
+  <div class="blog-post">
+  <h2 class="blog-post-title">{{post.title}}</h2>
+  <p class="blog-post-meta">{{post.datetime}} by <a href="#">{{post.author}}</a>
+  </p>
+  <p>{{post.content}}</p>
+  <hr>
+</div>
+</div>
+
+
+<!-- Add a New Comment -->
+<div class="container">
+    <h2>Comments <small class="text-success"> {{comments.count}}</small>
+    </h2>
+<div>
+    <h3>Add a Comment</h3>
+    <form action="{% url 'add_comment' %}" method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="posting">Post Comment</label>
+            <input type="text" class="form-control mx-2" id="posting" name="posting" placeholder="Enter comment" required>
+        </div>
+        <input type="hidden" name="postSno" value="{{ post.Sno }}">
+        <input type="hidden" name="parentSno" value="{{ comment.sno }}">
+        <button type="submit" class="btn btn-primary my-2 mx-3">Submit</button>
+    </form>
+</div>
+
+<hr>
+
+<!-- List Comments -->
+<div>
+    {% for comment in comments %}
+        <div style="border: 1px solid #ccc; margin-bottom: 10px; padding: 10px;">
+            <strong>{{ comment.user.username }}</strong> said:
+            <p>{{ comment.comment }}</p>
+            <small>{{ comment.timestamp }}</small>
+
+            <!-- Delete Comment Option -->
+            {% if comment.user == request.user %}
+                <form method="POST" action="{% url 'delete_comment' comment.sno %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" style="color: red;">Delete</button>
+                </form>
+            {% endif %}
+
+            <!-- Reply to Comment -->
+            <a class="btn btn-outline-primary" type="button" data-toggle="collapse" data-target="#reply{{comnt.sno}}" aria-expanded="false" aria-controls="collapseExample">
+                Reply
+              </a>
+
+            <!-- Replies -->
+            {% for reply in replies %}
+                {% if reply.parent.sno == comment.sno %}
+                    <div style="margin-left: 20px; border: 1px dashed #ccc; margin-top: 10px; padding: 10px;">
+                        <strong>{{ reply.user.username }}</strong> replied:
+                        <p>{{ reply.comment }}</p>
+                        <small>{{ reply.timestamp }}</small>
+
+                        {% if reply.user == request.user %}
+                            <form method="POST" action="{% url 'delete_comment' reply.sno %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" style="color: red;">Delete</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endfor %}
+    <div class="collapse" id="reply{{comnt.sno}}">
+        <div class="card card-body mx-3 bg-dark">
+          <form action="{% url 'add_comment' %}" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="posting">Post Comment</label>
+                <input type="text" class="form-control mx-2" id="posting" name="posting" placeholder="Enter comment" required>      
+            </div>
+            <!-- Ensure 'post.Sno' is used here to correctly reference the primary key -->
+            <input type="hidden" name="postSno" value="{{ post.Sno }}"> 
+            <input type="hidden" name="parentSno" value="{{ comment.sno|default:'' }}">
+            <button type="submit" class="btn btn-primary my-2 mx-3">Submit</button>
+        </form>
+        
+        </div>
+      </div>
+</div>
+</div>
+<script>
+    function setReplyParent(parentId) {
+        const replyField = document.getElementById("parentId");
+        replyField.value = parentId;
+
+        const commentBox = document.getElementById("commentText");
+        commentBox.focus();
+        commentBox.placeholder = "Replying to comment #" + parentId;
+    }
+</script>
+{% endblock %}
+
